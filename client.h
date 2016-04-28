@@ -1,1 +1,3 @@
-int client();
+#include <string>
+
+int client(std::string hostname);

@@ -9,12 +9,12 @@ const unsigned short PORT = 1234; // The port we are connecting to
 const unsigned short BUFFER_SIZE = 512;  // Size of our message buffer (i.e. maximum length of characters in a message)
 
 
-int client() {
+int client(string hostname) {
 	const char *host;         // Where we store the host name
 
 	IPaddress serverIP;       // The IP we will connect to
 	TCPsocket clientSocket;   // The socket to use
-	string    serverName = "localhost";     // The server name
+	string    serverName = hostname;     // The server name
 
 	string userInput = "";    // A string to hold our user input
 	int inputLength = 0;     // The length of our string in characters
@@ -125,8 +125,10 @@ int client() {
 
 
 	// Copy our user's string into our char array called "buffer"
-	//strcpy(buffer, userInput.c_str());
-
+	cout << ">";
+	cin >> buffer;
+	strcpy(buffer, userInput.c_str());
+	cout << "\n";
 
 	bool sendMessage = false; // Whether or not it's time to send the message (flips to true when the user presses return)
 

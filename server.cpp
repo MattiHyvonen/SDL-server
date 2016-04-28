@@ -14,7 +14,7 @@ const unsigned short MAX_CLIENTS = MAX_SOCKETS - 1; // Max number of clients in 
 const string SERVER_NOT_FULL = "OK";
 const string SERVER_FULL = "FULL";
 
-void server(){
+void server() {
 
 	IPaddress serverIP;                  // The IP of the server (this will end up being 0.0.0.0 - which means roughly "any IP address")
 	TCPsocket serverSocket;              // The server socket that clients will use to connect to us
