@@ -92,7 +92,8 @@ void server() {
 		int numActiveSockets = SDLNet_CheckSockets(socketSet, 0);
 
 		if (numActiveSockets != 0) {
-			std::cout << "There are currently " << numActiveSockets << " socket(s) with data to be processed." << std::endl;
+			;
+			//std::cout << "There are currently " << numActiveSockets << " socket(s) with data to be processed." << std::endl;
 		}
 
 		// Check if our server socket has received any data
@@ -126,7 +127,7 @@ void server() {
 				clientCount++;
 
 				// Send a message to the client saying "OK" to indicate the incoming connection has been accepted
-				SERVER_NOT_FULL.copy(buffer, SERVER_NOT_FULL.length() );
+				strcpy(buffer, SERVER_NOT_FULL.c_str());
 				int msgLength = strlen(buffer) + 1;
 				SDLNet_TCP_Send(clientSocket[freeSpot], (void *)buffer, msgLength);
 
@@ -140,7 +141,7 @@ void server() {
 				TCPsocket tempSock = SDLNet_TCP_Accept(serverSocket);
 
 				// Send a message to the client saying "FULL" to tell the client to go away
-				SERVER_NOT_FULL.copy(buffer, SERVER_FULL.length());
+				strcpy(buffer, SERVER_FULL.c_str());
 				int msgLength = strlen(buffer) + 1;
 				SDLNet_TCP_Send(tempSock, (void *)buffer, msgLength);
 
@@ -183,17 +184,17 @@ void server() {
 					cout << "Server is now connected to: " << clientCount << " client(s)." << endl << endl;
 				}
 				else { // If we read some data from the client socket...
-				
+					
 					// Output the message the server received to the screen
 					cout << "Received: >>>> " << buffer << " from client number: " << clientNumber << endl;
-
+					/*
 					// Send message to all other connected clients
 					int originatingClient = clientNumber;
 
 					for (int loop = 0; loop < MAX_CLIENTS; loop++)
 					{
 						// Send a message to the client saying "OK" to indicate the incoming connection has been accepted
-						//strcpy( buffer, SERVER_NOT_FULL.c_str() );
+						strcpy( buffer, SERVER_NOT_FULL.c_str() );
 						int msgLength = strlen(buffer) + 1;
 
 						// If the message length is more than 1 (i.e. client pressed enter without entering any other text), then
@@ -203,9 +204,9 @@ void server() {
 							cout << "Retransmitting message: " << buffer << " (" << msgLength << " bytes) to client number: " << loop << endl;
 							SDLNet_TCP_Send(clientSocket[loop], (void *)buffer, msgLength);
 						}
-
+						
 					}
-
+					*/
 					// If the client told us to shut down the server, then set the flag to get us out of the main loop and shut down
 					if (strcmp(buffer, "shutdown") == 0)
 					{
