@@ -11,7 +11,12 @@ int main(int argc, char* argv[]) {
 	else
 		hostname = argv[1];
 
-	client(hostname);
-	std::cin.ignore();
+	paketinKuuntelija server;
+
+ server.setup();
+	server.kuuntele();
+ //server.testi();
+
+	server.tuhoa();
 	return 0;
 }

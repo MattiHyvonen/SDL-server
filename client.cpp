@@ -154,7 +154,7 @@ int client(string hostname) {
 		sendMessage = false;
 		userInput = "";
 	}
-	
+
 	// Check our socket set for activity. Don't wait if there's nothing on the socket just continue
 	int socketActive = SDLNet_CheckSockets(socketSet, 0);
 

@@ -1,90 +1,96 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_net.h>
 #include <iostream>
+#include <sstream>
 #include <string>
+#include "server.h"
 
 using namespace std;
-
-const unsigned short PORT = 1234;            // The port our server will listen for incoming connecions on
-const unsigned short BUFFER_SIZE = 512;             // Size of our message buffer
-const unsigned short MAX_SOCKETS = 4;               // Max number of sockets
-const unsigned short MAX_CLIENTS = MAX_SOCKETS - 1; // Max number of clients in our socket set (-1 because server's listening socket takes the 1st socket in the set)
 
 // Messages to send back to any connecting client to let them know if we can accept the connection or not
 const string SERVER_NOT_FULL = "OK";
 const string SERVER_FULL = "FULL";
 
-void server() {
 
-	IPaddress serverIP;                  // The IP of the server (this will end up being 0.0.0.0 - which means roughly "any IP address")
-	TCPsocket serverSocket;              // The server socket that clients will use to connect to us
-	TCPsocket clientSocket[MAX_CLIENTS]; // An array of sockets for the clients, we don't include the server socket (it's specified separately in the line above)
-	bool      socketIsFree[MAX_CLIENTS]; // An array of flags to keep track of which client sockets are free (so we know whether we can use the socket for a new client connection or not)
-
-	char buffer[BUFFER_SIZE];            // Array of characters used to store the messages we receive
-	int receivedByteCount = 0;           // A variable to keep track of how many bytes (i.e. characters) we need to read for any given incoming message i.e. the size of the incoming data
-
-	int clientCount = 0;                 // Count of how many clients are currently connected to the server
-	bool shutdownServer = false;         // Flag to control when to shut down the server
-	
-	if (SDLNet_Init() == -1) {
-		std::cout << "Failed to intialise SDL_net: " << SDLNet_GetError() << std::endl;
-		exit(-1); // Quit!
-	}
-
-	// Create the socket set with enough space to store our desired number of connections (i.e. sockets)
-	SDLNet_SocketSet socketSet = SDLNet_AllocSocketSet(MAX_SOCKETS);
-	if (socketSet == NULL) {
-		std::cout << "Failed to allocate the socket set: " << SDLNet_GetError() << "\n";
-		exit(-1); // Quit!
-	}
-	else {
-		std::cout << "Allocated socket set with size:  " << MAX_SOCKETS << ", of which " << MAX_CLIENTS << " are availble for use by clients." << std::endl;
-	}
-
-	
-	// Initialize all the client sockets (i.e. blank them ready for use!)
-	for (int loop = 0; loop < MAX_CLIENTS; loop++) {
-		clientSocket[loop] = NULL;
-		socketIsFree[loop] = true; // Set all our sockets to be free (i.e. available for use for new client connections)
-	}
+void tulostaPaketti(pakettiDataT paketti) {
+  for(int i=0; i<paketti.pisteet.size(); i++) {
+    cout << "x: " << paketti.pisteet[i].x << " y: " << paketti.pisteet[i].y << "\n";
+  }
+}
 
 
-	// Try to resolve the provided server hostname. If successful, this places the connection details in the serverIP object and creates a listening port on the provided port number
-	// Note: Passing the second parameter as "NULL" means "make a listening port". SDLNet_ResolveHost returns one of two values: -1 if resolving failed, and 0 if resolving was successful
-	int hostResolved = SDLNet_ResolveHost(&serverIP, NULL, PORT);
+bool initializeServer() {
 
-	if (hostResolved == -1)	{
-		std::cout << "Failed to resolve the server host: " << SDLNet_GetError() << std::endl;
-	}
-	else { // If we resolved the host successfully, output the details
-		// Get our IP address in proper dot-quad format by breaking up the 32-bit unsigned host address and splitting it into an array of four 8-bit unsigned numbers...
-		Uint8 * dotQuad = (Uint8*)&serverIP.host;
+  static bool isReady = false;
 
-		//... and then outputting them cast to integers. Then read the last 16 bits of the serverIP object to get the port number
-		std::cout << "Successfully resolved server host to IP: " << (unsigned short)dotQuad[0] << "." << (unsigned short)dotQuad[1] << "." << (unsigned short)dotQuad[2] << "." << (unsigned short)dotQuad[3];
-		std::cout << " port " << SDLNet_Read16(&serverIP.port) << std::endl << std::endl;
-	}
-
-
-	// Try to open the server socket
-	serverSocket = SDLNet_TCP_Open(&serverIP);
-
-	if (!serverSocket) {
-		std::cout << "Failed to open the server socket: " << SDLNet_GetError() << "\n";
-		exit(-1);
-	}
-	else {
-		std::cout << "Sucessfully created server socket." << std::endl;
-	}
+  if(!isReady) {
+	   if (SDLNet_Init() == -1) {
+		    std::cerr << "Failed to intialise SDL_net: " << SDLNet_GetError() << std::endl;
+      return false;
+	   }
+    else {
+      isReady = true;
+      return true;
+    }
+  }
+  return true;
+}
 
 
-	// Add our server socket to the socket set
-	SDLNet_TCP_AddSocket(socketSet, serverSocket);
+paketinKuuntelija::paketinKuuntelija() {
 
-	std::cout << "Awaiting clients..." << std::endl;
+}
 
+pakettiDataT paketinKuuntelija::haePaketti() {
+
+}
+
+
+pakettiDataT luoPaketti(char* data, int kokoTavuina) {
+  stringstream ss;
+  pakettiDataT uusiPaketti;
+/*
+  ss.write(data, kokoTavuina);
+
+  vector<float> floats;
+
+  while(ss.good()) {
+    float f;
+    ss >> f;
+    floats.push_back(f);
+  }
+
+  //cerr << floats.size() << "\n";
+
+  while(floats.size() > 1) {
+    vec2 uusiPiste;
+    uusiPiste.x = floats[0];
+    uusiPiste.y = floats[1];
+    floats.erase(floats.begin(), floats.begin()+2);
+    uusiPaketti.pisteet.push_back(uusiPiste);
+  }
+  */
+
+  int n_floats = kokoTavuina / sizeof(float);
+
+  cerr << kokoTavuina << "tavua, " << n_floats << "lukua\n";
+
+  for(int i=0; i<n_floats-1; i+=2) {
+    vec2 uusiPiste;
+    uusiPiste.x = ((float*)data)[i];
+    uusiPiste.y = ((float*)data)[i+1];
+
+    uusiPaketti.pisteet.push_back(uusiPiste);
+  }
+
+  return uusiPaketti;
+}
+
+void paketinKuuntelija::kuuntele() {
 	// Main loop...
+	if(!initializeServer() )
+  cerr << "Ei voitu asettaa serveriä!\n"; //Abort!
+
 	do
 	{
 		// Check for activity on the entire socket set. The second parameter is the number of milliseconds to wait for.
@@ -134,7 +140,7 @@ void server() {
 				cout << "Client connected. There are now " << clientCount << " client(s) connected." << endl << endl;
 			}
 			else { // If we don't have room for new clients...
-			
+
 				cout << "*** Maximum client count reached - rejecting client connection ***" << endl;
 
 				// Accept the client connection to clear it from the incoming connections list
@@ -184,9 +190,28 @@ void server() {
 					cout << "Server is now connected to: " << clientCount << " client(s)." << endl << endl;
 				}
 				else { // If we read some data from the client socket...
-					
+
 					// Output the message the server received to the screen
-					cout << "Received: >>>> " << buffer << " from client number: " << clientNumber << endl;
+					//cout << "Received: >>>> " << buffer << " from client number: " << clientNumber << endl; //huom ei katkaise viestiä oikein
+     //cout << "length: " << strlen(buffer) << "\n";
+     //cout << "Byte count: " << receivedByteCount << "\n";
+
+     //Luo paketti saadun datan perusteella
+     pakettiDataT uusiPaketti = luoPaketti(buffer, receivedByteCount);
+
+     int piste_n = uusiPaketti.pisteet.size();
+
+     cout << "Tuli " << uusiPaketti.pisteet.size() << "pistettä\n";
+     tulostaPaketti(uusiPaketti);
+
+     //Jos paketti oli kunnollinen, työnnä vektoriin
+     paketit.push_back(uusiPaketti);
+
+     //Jos vektori on täynnä, poista alkupäästä. HUOM tätä pitää optimoida!
+     while(paketit.size() > MAX_PAKETTEJA) {
+       paketit.erase(paketit.begin() );
+     }
+
 					/*
 					// Send message to all other connected clients
 					int originatingClient = clientNumber;
@@ -204,7 +229,7 @@ void server() {
 							cout << "Retransmitting message: " << buffer << " (" << msgLength << " bytes) to client number: " << loop << endl;
 							SDLNet_TCP_Send(clientSocket[loop], (void *)buffer, msgLength);
 						}
-						
+
 					}
 					*/
 					// If the client told us to shut down the server, then set the flag to get us out of the main loop and shut down
@@ -223,7 +248,73 @@ void server() {
 
 	} while (shutdownServer == false); // End of main loop
 
-	// Free our socket set (i.e. all the clients in our socket set)
+}
+
+
+//void server() {
+int paketinKuuntelija::setup(){
+
+ if(!initializeServer())
+  std::cerr << "Ei voitu alustaa SDL_Net:iä\n";
+
+	// Create the socket set with enough space to store our desired number of connections (i.e. sockets)
+	socketSet = SDLNet_AllocSocketSet(MAX_SOCKETS);
+	if (socketSet == NULL) {
+		std::cerr << "Failed to allocate the socket set: " << SDLNet_GetError() << "\n";
+		//abort!
+	}
+	else {
+		std::cerr << "Allocated socket set with size:  " << MAX_SOCKETS << ", of which " << MAX_CLIENTS << " are availble for use by clients." << std::endl;
+	}
+
+
+	// Initialize all the client sockets (i.e. blank them ready for use!)
+	for (int loop = 0; loop < MAX_CLIENTS; loop++) {
+		clientSocket[loop] = NULL;
+		socketIsFree[loop] = true; // Set all our sockets to be free (i.e. available for use for new client connections)
+	}
+
+
+	// Try to resolve the provided server hostname. If successful, this places the connection details in the serverIP object and creates a listening port on the provided port number
+	// Note: Passing the second parameter as "NULL" means "make a listening port". SDLNet_ResolveHost returns one of two values: -1 if resolving failed, and 0 if resolving was successful
+	int hostResolved = SDLNet_ResolveHost(&serverIP, NULL, PORT);
+
+	if (hostResolved == -1)	{
+		std::cout << "Failed to resolve the server host: " << SDLNet_GetError() << std::endl;
+	}
+	else { // If we resolved the host successfully, output the details
+		// Get our IP address in proper dot-quad format by breaking up the 32-bit unsigned host address and splitting it into an array of four 8-bit unsigned numbers...
+		Uint8 * dotQuad = (Uint8*)&serverIP.host;
+
+		//... and then outputting them cast to integers. Then read the last 16 bits of the serverIP object to get the port number
+		std::cout << "Successfully resolved server host to IP: " << (unsigned short)dotQuad[0] << "." << (unsigned short)dotQuad[1] << "." << (unsigned short)dotQuad[2] << "." << (unsigned short)dotQuad[3];
+		std::cout << " port " << SDLNet_Read16(&serverIP.port) << std::endl << std::endl;
+	}
+
+
+	// Try to open the server socket
+	serverSocket = SDLNet_TCP_Open(&serverIP);
+
+	if (!serverSocket) {
+		std::cout << "Failed to open the server socket: " << SDLNet_GetError() << "\n";
+		exit(-1);
+	}
+	else {
+		std::cout << "Sucessfully created server socket." << std::endl;
+	}
+
+
+	// Add our server socket to the socket set
+	SDLNet_TCP_AddSocket(socketSet, serverSocket);
+
+	std::cout << "Awaiting clients..." << std::endl;
+
+	return 0;
+}
+
+
+void paketinKuuntelija::tuhoa() {
+// Free our socket set (i.e. all the clients in our socket set)
 	SDLNet_FreeSocketSet(socketSet);
 
 	// Close our server socket, cleanup SDL_net and finish!
@@ -231,5 +322,18 @@ void server() {
 
 	SDLNet_Quit();
 
-	return;
 }
+
+
+
+
+void paketinKuuntelija::testi() {
+  char* testiData = "1.4\n1\n9.5\n4\n0\n0.0\n33\n16\n";
+
+  pakettiDataT uusiPaketti = luoPaketti(testiData, strlen(testiData) );
+  cout << "Testipaketti: " << uusiPaketti.pisteet.size() << " pistettä\n";
+  tulostaPaketti(uusiPaketti);
+
+}
+
+
